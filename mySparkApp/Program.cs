@@ -16,13 +16,23 @@ namespace mySparkApp
                 .GetOrCreate();
 
             // Create initial DataFrame
-            DataFrame dataFrame = spark.Read().Text("input.txt");
+            DataFrame df1 = spark.Read().Text("input.txt");
+
+            //words
+            var df2 = df1.Select(Functions.Split(Functions.Col("value"), " ").Alias("words"));
+
+            //word
+            var df3 = df2.Select(Functions.Explode(Functions.Col("words")).Alias("word"));
+
+            var rs = df3.GroupBy("word").Count();
+
+            var s = rs.OrderBy(Functions.Col("count").Desc());
+            s.Show();
 
             // Count words
-            DataFrame words = dataFrame
+            DataFrame words = df1
                 .Select(Functions.Split(Functions.Col("value"), " ").Alias("words"))
-                .Select(Functions.Explode(Functions.Col("words"))
-                .Alias("word"))
+                .Select(Functions.Explode(Functions.Col("words")).Alias("word"))
                 .GroupBy("word")
                 .Count()
                 .OrderBy(Functions.Col("count").Desc());
