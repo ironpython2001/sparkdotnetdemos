@@ -10,6 +10,21 @@ namespace SparkWordCount
     {
         static void Main(string[] args)
         {
+            //Approach1_UsingUdfs();
+            Approach2_NoUdfs();
+        }
+
+        static void Approach2_NoUdfs()
+        {
+            var spark = SparkSession.Builder().GetOrCreate();
+            var dfText = spark.Read().Text("wordcount.txt");
+            var dfToLines = dfText.Filter(dfText["value"].Contains("to"));
+            Console.WriteLine("count is ");
+            Console.WriteLine(dfToLines.Count());
+        }
+
+        static void Approach1_UsingUdfs()
+        {
             //var text = System.IO.File.ReadAllText("wordcount.txt");
 
             //var cnt = text.Split("\n").ToList()
@@ -27,7 +42,7 @@ namespace SparkWordCount
 
             //get lines
             var dfLinesContainingTo = dfText.Select(udfCount(dfText["value"])).ToDF("to");
-            
+
             ////print columns
             //foreach(var col in dfLinesContainingTo.Columns())
             //{
@@ -36,7 +51,7 @@ namespace SparkWordCount
             //dfLinesContainingTo.Show();
             //dfLinesContainingTo.PrintSchema();
             RelationalGroupedDataset rgd = dfLinesContainingTo
-                    .Where(dfLinesContainingTo["to"]==1)
+                    .Where(dfLinesContainingTo["to"] == 1)
                     .GroupBy(dfLinesContainingTo["to"]);
             var df = rgd.Count();
             df.Show();
@@ -48,7 +63,6 @@ namespace SparkWordCount
             //    count = count + (int)item.Get(0);
             //}
             //Console.WriteLine(count);
-
         }
     }
 }
