@@ -14,7 +14,7 @@ namespace DataFrameApiDemo1
                                    .AppName("AuthorsAges")
                                    .GetOrCreate();
 
-            var mySchema = new StructType(new[]
+            var mySchema = new StructType(new List<StructField>
             {
                 new StructField("Name", new StringType()),
                 new StructField("Age", new IntegerType())
@@ -31,7 +31,6 @@ namespace DataFrameApiDemo1
 
             var data_df = spark.CreateDataFrame(myData, mySchema);
             data_df.Show();
-
             //Group the same names together, aggregate their ages, and compute an average
             var avg_df = data_df.GroupBy("Name").Agg(Avg("Age"));
             avg_df.Show();
