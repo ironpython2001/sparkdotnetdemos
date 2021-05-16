@@ -3,6 +3,7 @@ using Microsoft.Spark.Sql;
 using static Microsoft.Spark.Sql.Functions;
 using Microsoft.Spark.Sql.Types;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace ApplySchemaToJsonData
 {
@@ -31,6 +32,43 @@ namespace ApplySchemaToJsonData
             var blogs_df = spark.Read()
                 .Schema(schema)
                 .Json(@"data.json");
+
+            //columns
+            foreach (var col in blogs_df.Columns())
+            {
+                WriteLine(col);
+            }
+
+            // Access a particular column with col and it returns a Column type
+            WriteLine(blogs_df.Col("Id"));
+
+            // Use an expression to compute a value
+            blogs_df.Select(Expr("Hits * 2")).Show(2);
+            // or use col to compute value
+            blogs_df.Select(blogs_df.Col("Hits") * 2).Show(2);
+
+
+            // Use an expression to compute big hitters for blogs
+            // This adds a new column, Big Hitters, based on the conditional expression
+            blogs_df.WithColumn("Big Hitters", blogs_df.Col("Hits") > 10000).Show();
+
+            // Concatenate three columns, create a new column, and show the
+            // newly created concatenated column
+            blogs_df.WithColumn("AuthorsId", Concat(blogs_df.Col("First"), blogs_df.Col("Last"), blogs_df.Col("Id")))
+                .Select("AuthorsId")
+                .Show(4);
+
+
+            // These statements return the same value, showing that
+            // expr is the same as a col method call
+            blogs_df.Select(Expr("Hits")).Show(2);
+            blogs_df.Select(blogs_df.Col("Hits")).Show(2);
+            blogs_df.Select("Hits").Show(2);
+
+            // Sort by column "Id" in descending order
+            blogs_df.Sort(blogs_df.Col("Id").Desc()).Show();
+
+
 
             blogs_df.Show();
             blogs_df.PrintSchema();
