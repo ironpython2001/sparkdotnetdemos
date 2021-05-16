@@ -58,8 +58,13 @@ namespace DataFrameOperations
             firedf.Show();
 
             // Page 60 save as a Parquet file
-            var parquet_path = Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), "sf-fire-calls");
+            var parquet_path = Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), "sf-fire-calls-path");
             firedf.Write().Format("parquet").Save(parquet_path);
+
+
+            // save as a table
+            var parquet_table_path = Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), "sf-fire-calls-table");
+            firedf.Write().Format("parquet").SaveAsTable("sampletable");
 
             spark.Stop();
         }
