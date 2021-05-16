@@ -69,9 +69,23 @@ namespace ApplySchemaToJsonData
             blogs_df.Sort(blogs_df.Col("Id").Desc()).Show();
 
 
+            //create row
 
-            blogs_df.Show();
-            blogs_df.PrintSchema();
+            var blog_row = new GenericRow(new object[] { 6, "Reynold", "Xin", "https://tinyurl.6", 255568 });
+            WriteLine(blog_row[1].ToString());
+
+
+            //create DataFrames from row objects
+            var blog_rows = new List<GenericRow>
+            {
+                 new GenericRow(new object[]{ "Matei Zaharia", "CA" })
+            };
+            var authors_df = spark.CreateDataFrame(blog_rows, new StructType(new List<StructField> 
+                { 
+                    new StructField("Author",new StringType()), 
+                    new StructField("State",new StringType())
+                  }));
+            authors_df.Show();
 
             spark.Stop();
         }
