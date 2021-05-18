@@ -1,0 +1,25 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.31005.135
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SparkSqlOperations", "SparkSqlOperations.csproj", "{1278658C-04AF-4ACE-BBF5-84C1C1528A63}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{1278658C-04AF-4ACE-BBF5-84C1C1528A63}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{1278658C-04AF-4ACE-BBF5-84C1C1528A63}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{1278658C-04AF-4ACE-BBF5-84C1C1528A63}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{1278658C-04AF-4ACE-BBF5-84C1C1528A63}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {59799F28-B18B-4202-8DC3-8CED07D66D69}
+	EndGlobalSection
+EndGlobal
