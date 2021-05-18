@@ -1,0 +1,6 @@
+﻿The Advantage of using Spark Shell is that you have Spark Context available to you right away,
+and you don’t have to initialize it. We’ll cover how to do that in chapters to come, but for now it’s
+sufficient to say that Spark Context represents a connection to the Spark cluster and is used to
+do computational operations on it. The context available in the shell is not actually an out-of-thebox connection to a cluster, it’s a context intended for testing, evaluations, and runs on a single
+node or in the development phase. Luckily, that is just what we need at the moment. Enter the
+following:
