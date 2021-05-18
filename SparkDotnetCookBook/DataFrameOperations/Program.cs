@@ -66,6 +66,62 @@ namespace DataFrameOperations
             var parquet_table_path = Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), "sf-fire-calls-table");
             firedf.Write().Format("parquet").SaveAsTable("sampletable");
 
+            //Projections and filters
+            var fewfiredf = firedf.Select("IncidentNumber", "AvailableDtTm", "CallType")
+                               .Where(firedf.Col("CallType")!= "Medical Incident");
+
+            fewfiredf.Show(numRows:5);
+
+
+            //return number of distinct types of calls using countDistinct()
+            firedf.Select("CallType").Where(firedf.Col("CallType").IsNotNull())
+                .Agg(CountDistinct(firedf.Col("CallType"))).Alias("DistinctCallTypes").Show();
+
+            // filter for only distinct non-null CallTypes from all the rows
+            firedf.Select("CallType")
+                .Where(firedf.Col("CallType").IsNotNull())
+                .Distinct()
+                .Show(10);
+
+
+            //Renaming columns
+            var new_fire_df = firedf.WithColumnRenamed("Delay", "ResponseDelayedinMins");
+            new_fire_df.Select(new_fire_df.Col("ResponseDelayedinMins"))
+                    .Where(new_fire_df.Col("ResponseDelayedinMins") > 5)
+                    .Show(5);
+             
+            //change col datatype and drop col
+            var fire_ts_df = new_fire_df
+                .WithColumn("IncidentDate",ToTimestamp(new_fire_df.Col("CallDate"), "MM/dd/yyyy"))
+                .Drop(new_fire_df.Col("CallDate"))
+                .WithColumn("OnWatchDate", ToTimestamp(new_fire_df.Col("WatchDate"), "MM/dd/yyyy"))
+                .Drop(new_fire_df.Col("WatchDate"))
+                .WithColumn("AvailableDtTS", ToTimestamp(new_fire_df.Col("AvailableDtTm"), "MM/dd/yyyy hh:mm:ss a"))
+                .Drop(new_fire_df.Col("AvailableDtTm"));
+
+            //# Select the converted columns
+            fire_ts_df.Select(fire_ts_df.Col("IncidentDate"),fire_ts_df.Col("OnWatchDate"),fire_ts_df.Col( "AvailableDtTS")).Show();
+
+            //get year IncidentDate
+            fire_ts_df.Select(Year(fire_ts_df.Col("IncidentDate"))).Distinct()
+                .OrderBy(Year(fire_ts_df.Col("IncidentDate"))).Show();
+
+            //Aggregations groupby and order by desc
+            fire_ts_df.Select("CallType")
+                    .Where(Col("CallType").IsNotNull())
+                    .GroupBy("CallType")
+                    .Count()
+                    .OrderBy(Desc("count"))
+                    .Show();
+
+            //page 67 - Other common DataFrame operations
+            //descriptive statistical methods like min(), max(), sum()
+            fire_ts_df.Select(Sum("NumAlarms"), Avg("ResponseDelayedinMins"), Min("ResponseDelayedinMins"), Max("ResponseDelayedinMins"))
+                .Show();
+
+            
+
+
             spark.Stop();
         }
     }
