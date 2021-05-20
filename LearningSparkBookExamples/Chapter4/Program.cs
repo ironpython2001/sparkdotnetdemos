@@ -13,6 +13,16 @@ namespace Chapter4
     {
         static void Main(string[] args)
         {
+            //Samples1();
+            //CreatingManagedTable();
+            CreatingUnManagedTable();
+        }
+
+        static void Samples1()
+        {
+            //How to Run
+            //spark-submit --class org.apache.spark.deploy.dotnet.DotnetRunner  --master local microsoft-spark-3-0_2.12-1.1.1.jar debug
+
             var spark1 = SparkSession.Builder()
                                  .AppName("chapter4")
                                  .GetOrCreate();
@@ -60,50 +70,77 @@ namespace Chapter4
 
 
             spark1.Stop();
+        }
+
+        static void CreatingManagedTable()
+        {
+            //How to Run
+            //spark-submit --class org.apache.spark.deploy.dotnet.DotnetRunner  --master local microsoft-spark-3-0_2.12-1.1.1.jar debug
+            var csvFile = "departuredelays.csv";
 
             //SQL Tables and Views
             //page no 90
-            
-            var conf = new Microsoft.Spark.SparkConf()
-                            .Set("spark.sql.warehouse.dir", "hdfs://namenode/sql/metadata/hive")
-                            .Set("spark.sql.catalogImplementation", "hive")
-                            .SetMaster("local[*]")
-                            .SetAppName("chapter4_2");
-
-            var spark2 = SparkSession.Builder()
-                                 .Config(conf)
+            var spark = SparkSession.Builder()
                                 .EnableHiveSupport()
                                 .GetOrCreate();
 
-            
+            /*
+             * DEVELOPER COMMENTS:
+             * Some times while executing the "spark2.Sql("CREATE DATABASE learn_spark_db")"
+             * WE WILL GET THE BELOW ERROR 
+             * /TMP/hive on HDFS should be writable. The current permissions are: RW RW RW - (on Windows)
+             * 
+             * To solve the above error . On the command prompt (if you are running windows) run the below command
+             * %HADOOP_HOME%\bin\winutils.exe ls e:\hive(where e:\hive is my hive directory)
+             * the output of the above command will be like below 
+             * --------- 1 domainname\username domainname\Domain Users 0 May 20 2021 e:\hive
+             * after running the above command I also observed that a new directory got created 
+             * in my E drive "E:\tmp\hive\loggedinusername"
+             * 
+             * IF YOU ARE CONNECTED TO OFFICE NETWORK . RUN THE ABOVE COMMAND 
+             * AFTER CONNECTING TO VPN FOR YOUR OFFICE NETWORK . SO THAT WE WILL BE ON THE SAME DOMAIN
+             * This is an issue with winutils
+             * 
+             * I added some useful URL's that helped me to solve the above issue
+            */
 
             //Creating SQL Databases and Tables
-            spark2.Sql("CREATE DATABASE learn_spark_db");
-            spark2.Sql("USE learn_spark_db");
+            //creating managed table
+            spark.Sql("CREATE DATABASE learn_spark_db");
+            spark.Sql("USE learn_spark_db");
 
             //Creating a managed table
-            spark2.Sql(@"CREATE TABLE managed_us_delay_flights_tbl (date STRING, delay INT,
+            spark.Sql(@"CREATE TABLE managed_us_delay_flights_tbl (date STRING, delay INT,
                         distance INT, origin STRING, destination STRING)");
 
-            //useful urls
-            //https://stackoverflow.com/questions/50914102/why-do-i-get-a-hive-support-is-required-to-create-hive-table-as-select-error/54552891
-            //https://stackoverflow.com/questions/54967186/cannot-create-table-with-spark-sql-hive-support-is-required-to-create-hive-tab
 
-            //how to submit spark job
-            //spark-submit --class org.apache.spark.deploy.dotnet.DotnetRunner --conf spark.sql.catalogImplementation=hive  --master local microsoft-spark-3-0_2.12-1.1.1.jar debug
-
-            //if we get error "The root scratch dir: /tmp/hive on HDFS should be writable. Current permissions are: rw-rw-rw- (on Windows)"
-            //https://stackoverflow.com/questions/34196302/the-root-scratch-dir-tmp-hive-on-hdfs-should-be-writable-current-permissions
-            //https://stackoverflow.com/questions/40764807/null-entry-in-command-string-exception-in-saveastextfile-on-pyspark/40958969#40958969
 
             // we can do the same thing using the DataFrame API like this
-            var schema = @"date STRING, delay INT, distance INT, origin STRING, destination STRING";
-            var flights_df = spark2.Read().Schema(schema).Csv(csvFile);
-            flights_df.Write().SaveAsTable("managed_us_delay_flights_tbl");
+            //var schema = @"date STRING, delay INT, distance INT, origin STRING, destination STRING";
+            //var flights_df = spark.Read().Schema(schema).Csv(csvFile);
+            //flights_df.Write().SaveAsTable("managed_us_delay_flights_tbl");
 
-            spark2.Stop();
-
-            
+            spark.Stop();
         }
+
+        static void CreatingUnManagedTable()
+        {
+            //page no 91
+            var spark = SparkSession.Builder()
+                                .EnableHiveSupport()
+                                .GetOrCreate();
+
+            var csvFile = "departuredelays.csv";
+            spark.Sql(@$"CREATE TABLE us_delay_flights_tbl(date STRING, delay INT,
+                      distance INT, origin STRING, destination STRING)
+                     USING csv OPTIONS(PATH '{csvFile}')");
+
+             //creating views
+             
+
+
+            spark.Stop();
+        }
+
     }
 }
