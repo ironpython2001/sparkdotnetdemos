@@ -16,7 +16,8 @@ namespace Chapter4
             //Samples1();
             //CreatingManagedTable();
             //CreatingUnManagedTable();
-            ImageDFDemo();
+            //ImagesDataFrameDemo();
+            Program.BinaryFileDataFrameDemo();
         }
 
         static void Samples1()
@@ -157,7 +158,7 @@ namespace Chapter4
 
             //Reading Tables into DataFrames
             var us_flights_df = spark.Sql("SELECT * FROM us_delay_flights_tbl");
-            
+
 
             //Note that you can only access a DataFrameReader through a SparkSession instance.
             //That is, you cannot create an instance of DataFrameReader
@@ -171,18 +172,15 @@ namespace Chapter4
 
             us_flights_df.Write().Format("json").Mode(SaveMode.Overwrite).Save("sample.json");
 
-
             //drop global view
             spark.Sql("DROP VIEW IF EXISTS global_temp.us_origin_airport_SFO_global_tmp_view");
             //spark.Catalog.DropGlobalTempView("global_temp.us_origin_airport_SFO_global_tmp_view");
 
             spark.Stop();
 
-
-           
         }
 
-        static void ImageDFDemo()
+        static void ImagesDataFrameDemo()
         {
             var spark = SparkSession.Builder()
                                .GetOrCreate();
@@ -193,10 +191,27 @@ namespace Chapter4
             images_df.PrintSchema();
 
             //var strCols = string.Join(",",images_df.Columns());
-            images_df.Select("image.height").Cache().Show(numRows: 5);
+            images_df.Select("image.height", "image.width", "image.nChannels", "image.mode").Cache().Show(numRows: 5);
             spark.Stop();
         }
-       
+        
+
+        static void BinaryFileDataFrameDemo()
+        {
+            var spark = SparkSession.Builder()
+                               .GetOrCreate();
+
+            //reading images
+            //not working 
+            var image_dir = @"train_images/";
+            var binaryfiles_df = spark.Read()
+                .Format("image")
+                .Option("pathGlobFilter", "*.JPG")
+                .Load(image_dir);
+            WriteLine(binaryfiles_df.Count());
+            binaryfiles_df.Show(5);
+            spark.Stop();
+        }
 
     }
 }
