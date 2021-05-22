@@ -15,7 +15,8 @@ namespace Chapter4
         {
             //Samples1();
             //CreatingManagedTable();
-            CreatingUnManagedTable();
+            //CreatingUnManagedTable();
+            ImageDFDemo();
         }
 
         static void Samples1()
@@ -131,16 +132,71 @@ namespace Chapter4
                                 .GetOrCreate();
 
             var csvFile = "departuredelays.csv";
-            spark.Sql(@$"CREATE TABLE us_delay_flights_tbl(date STRING, delay INT,
+            spark.Sql(@$"CREATE TABLE IF NOT EXISTS us_delay_flights_tbl(date STRING, delay INT,
                       distance INT, origin STRING, destination STRING)
                      USING csv OPTIONS(PATH '{csvFile}')");
 
-             //creating views
-             
+            //CREATING GLOBAL VIEWS
+            spark.Sql(@"CREATE OR REPLACE GLOBAL TEMP VIEW us_origin_airport_SFO_global_tmp_view AS
+                    SELECT date, delay, origin, destination from us_delay_flights_tbl WHERE
+                    origin = 'SFO'");
 
+            var df1 = spark.Sql("SELECT * FROM global_temp.us_origin_airport_SFO_global_tmp_view");
+
+            //use any of the below statements
+            //var df2 = spark.Sql("SELECT * FROM us_origin_airport_SFO_global_tmp_view");
+            var df3 = spark.Read().Table("global_temp.us_origin_airport_SFO_global_tmp_view");
+            df3.Show();
+
+            //PAGE NO 93
+            //VIEWING METADATA
+            spark.Catalog.ListDatabases().Show();
+            spark.Catalog.ListTables().Show();
+            spark.Catalog.ListColumns("global_temp.us_origin_airport_SFO_global_tmp_view").Show();
+
+
+            //Reading Tables into DataFrames
+            var us_flights_df = spark.Sql("SELECT * FROM us_delay_flights_tbl");
+            
+
+            //Note that you can only access a DataFrameReader through a SparkSession instance.
+            //That is, you cannot create an instance of DataFrameReader
+            DataFrameReader dfr = spark.Read();
+            //spark.ReadStream();
+
+            //DataFrameWriter
+            //we cannot create an instance of DataFrameWriter
+            //DataFrameWriter dfw = us_flights_df.Write();
+            //us_flights_df.WriteStream();
+
+            us_flights_df.Write().Format("json").Mode(SaveMode.Overwrite).Save("sample.json");
+
+
+            //drop global view
+            spark.Sql("DROP VIEW IF EXISTS global_temp.us_origin_airport_SFO_global_tmp_view");
+            //spark.Catalog.DropGlobalTempView("global_temp.us_origin_airport_SFO_global_tmp_view");
 
             spark.Stop();
+
+
+           
         }
+
+        static void ImageDFDemo()
+        {
+            var spark = SparkSession.Builder()
+                               .GetOrCreate();
+
+            //reading images
+            var image_dir = "train_images";
+            var images_df = spark.Read().Format("image").Load(image_dir);
+            images_df.PrintSchema();
+
+            //var strCols = string.Join(",",images_df.Columns());
+            images_df.Select("image.height").Cache().Show(numRows: 5);
+            spark.Stop();
+        }
+       
 
     }
 }
