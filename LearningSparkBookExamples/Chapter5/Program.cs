@@ -2,7 +2,8 @@
 using Microsoft.Spark.Sql.Types;
 using System;
 using static Microsoft.Spark.Sql.Functions;
-
+using static Microsoft.Spark.Sql.DataFrameFunctions;
+using Microsoft.Data.Analysis;
 
 namespace Chapter5
 {
@@ -10,7 +11,8 @@ namespace Chapter5
     {
         static void Main(string[] args)
         {
-            Program.example_sparksqludfs();
+            //Program.example_sparksqludfs();
+            Program.example_vectorudfs();
         }
 
         static void example_sparksqludfs()
@@ -20,19 +22,17 @@ namespace Chapter5
 
             //page no 114
             var spark = SparkSession.Builder()
-                                .AppName("chapter4")
+                                .AppName("chapter5")
                                 .GetOrCreate();
-            //string IntToStr(int id)
-            //{
-            //    return $"The id is {id}";
-            //}
-            //Func<Column, Column> udfIntToString = Udf<int, string>(id => IntToStr(id));
 
-            //spark.Udf().Register<int?, string, string>(
-            //    "my_udf",
-            //    (age, name) => name + " with " + ((age.HasValue) ? age.Value.ToString() : "null"));
-            //var dataFrame = spark.Sql("SELECT ID from range(1000)");
-            //dataFrame.Select(udfIntToString(dataFrame["ID"])).Show();
+            string IntToStr(int id)
+            {
+                return $"The id is {id}";
+            }
+            Func<Column, Column> udfIntToString = Udf<int, string>(id => IntToStr(id));
+
+            var df1 = spark.Range(1, 100);
+            df1.Select(udfIntToString(df1.Col("ID"))).Show();
 
 
             //Func<Column, Column> cubed = Udf<int, int>(id => { return id * id; });
@@ -49,5 +49,30 @@ namespace Chapter5
 
             spark.Stop();
         }
+
+        static void example_vectorudfs()
+        {
+            //how to run
+            //spark-submit --class org.apache.spark.deploy.dotnet.DotnetRunner  --master local microsoft-spark-3-0_2.12-1.1.1.jar debug
+            //https://devblogs.microsoft.com/dotnet/net-for-apache-spark-in-memory-dataframe-support/
+
+
+            //page no 116
+            //Vectorized UDFs or Pandas UDFs
+            //.net VectorUdf
+            var spark = SparkSession.Builder()
+                 .Config("spark.sql.shuffle.partitions", "3")
+                    .AppName("chapter5")
+                    .GetOrCreate();
+
+
+            Func<Column, Column> cubed_udf = VectorUdf<Int64DataFrameColumn, Int64DataFrameColumn>((a) => { return a * a * a; });
+            var df = spark.Range(1, 4);
+            df.Select(cubed_udf(df["id"])).Show();
+
+            spark.Stop();
+        }
+
+
     }
 }
