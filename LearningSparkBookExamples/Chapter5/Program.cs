@@ -4,6 +4,8 @@ using System;
 using static Microsoft.Spark.Sql.Functions;
 using static Microsoft.Spark.Sql.DataFrameFunctions;
 using Microsoft.Data.Analysis;
+using System.Linq;
+
 
 namespace Chapter5
 {
@@ -12,11 +14,16 @@ namespace Chapter5
         static void Main(string[] args)
         {
             //Program.example_sparksqludfs();
-            Program.example_vectorudfs();
+            //Program.example_vectorudfs();
+            //sample();
+
+            new SampleVectorUdafs().run();
         }
 
         static void example_sparksqludfs()
         {
+            //dotnet spark examples
+            //https://the.agilesql.club/
             //how to run
             //spark-submit --class org.apache.spark.deploy.dotnet.DotnetRunner  --master local microsoft-spark-3-0_2.12-1.1.1.jar debug
 
@@ -61,18 +68,47 @@ namespace Chapter5
             //Vectorized UDFs or Pandas UDFs
             //.net VectorUdf
             var spark = SparkSession.Builder()
-                 .Config("spark.sql.shuffle.partitions", "3")
+                .Config("spark.sql.warehouse.dir", "file:///e:/tmp")
                     .AppName("chapter5")
                     .GetOrCreate();
 
 
-            Func<Column, Column> cubed_udf = VectorUdf<Int64DataFrameColumn, Int64DataFrameColumn>((a) => { return a * a * a; });
-            var df = spark.Range(1, 4);
-            df.Select(cubed_udf(df["id"])).Show();
-
+            Func<Column, Column> cubed_udf = VectorUdf<Int64DataFrameColumn, Int64DataFrameColumn>((a) => { return a ; });
+            var df = spark.Range(1, 10);
+            var df1 = df.Select(cubed_udf(df["id"])).As("df1");
+            //not working for me
+            df1.Show();
+            foreach( var i in df1.Collect())
+            {
+                Console.WriteLine(i);
+            }
+            df.Show();
             spark.Stop();
         }
 
+
+
+        static void sample()
+        {
+            SparkSession spark = SparkSession
+                .Builder()
+                .AppName("sample")
+                .GetOrCreate();
+
+            var dataFrame = spark.Range(0, 100).Repartition(4);
+
+            //var array20 = Udf<int, int[]>(
+            //    (col1) => Enumerable.Range(0, col1).ToArray());
+
+            //dataFrame = dataFrame.WithColumn("array", array20(dataFrame["id"]));
+
+            
+            // Microsoft.Data.Analysis
+            var array21 = DataFrameFunctions.VectorUdf<Int64DataFrameColumn, Int64DataFrameColumn>((id) => id + id.Length);
+            dataFrame = dataFrame.WithColumn("array", array21(dataFrame["id"]));
+            dataFrame.Select(dataFrame.Col("array")).Show();
+
+        }
 
     }
 }
