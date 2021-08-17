@@ -52,7 +52,9 @@ namespace Chapter5
             dataFrame = dataFrame.WithColumn("arrowVectorUdf", arrowVectorUdf(dataFrame["array"]));
 
             dataFrame = dataFrame.WithColumn("dataFrameVector", dataFrameVector(dataFrame["array"]));
-            dataFrame.Show();
+
+            var d = dataFrame.Select(dataFrame["dataFrameVector"]);
+            d.Show();
         }
     }
 }
